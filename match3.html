@@ -23,7 +23,7 @@
 		}
 
 		.cell--picked {
-			animation: disappear .7s;
+			animation: disappear .4s;
 		}
 
 		@keyframes disappear {
@@ -165,6 +165,8 @@
 
 				cells.forEach(cell => { cell.collected = true; });
 
+				$scope.clicksBlocked = true;
+
 				setTimeout(() => {
 					cells.forEach(cell => {
 						cell.collected = false;
@@ -178,8 +180,9 @@
 					});
 
 					slideFieldDown();
+					$scope.clicksBlocked = false;
 					$scope.$digest();
-				}, 700);
+				}, 400);
 			};
 
 
@@ -189,6 +192,10 @@
 			$scope.slideDown = slideFieldDown;
 
 			$scope.onCellClicked = cell => {
+				if ($scope.clicksBlocked) {
+					return;
+				}
+
 				wipeNeighbors(cell);
 			};
 
