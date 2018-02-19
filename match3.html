@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Match3 analyzer</title>
+	<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.0/angular-material.min.css">
+
+	<style>
+		.playfield {
+			padding: 1em;
+			width: 330px;
+		}
+
+		.cell {
+			float: left;
+
+			width: 30px;
+			height: 30px;
+
+			border: 1px solid white;
+			background: #eee;
+
+			outline: none !important;
+		}
+
+		.cell--picked {
+			animation: disappear .7s;
+		}
+
+		@keyframes disappear {
+			100% { opacity: 0; }
+		}
+	</style>
+</head>
+
+
+<body ng-app="Match3" ng-cloak layout='column' ng-controller='PlayfieldController'>
+
+	<div flex='33'></div>
+
+	<div layout='row' flex>
+		<div flex='33'></div>
+
+		<div class='playfield'>
+			<div class='cell' ng-repeat='cell in cells'
+				ng-style='{ background: cell.content.color }'
+				ng-click='onCellClicked(cell)'
+				ng-class='{"cell--picked" : cell.collected }'>
+			</div>
+		</div>
+
+		<div layout='column' >
+			<h2>Collected</h2>
+			<div ng-repeat='(color, count) in collected'><b>{{:: color}}</b>: {{ count }}</div>
+		</div>
+	</div>
+</body>
+
+
+	<!-- Angular Material requires Angular.js Libraries -->
+	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular-animate.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular-aria.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular-messages.min.js"></script>
+
+	<!-- Angular Material Library -->
+	<script src="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.0/angular-material.min.js"></script>
+
+	<!-- Your application bootstrap  -->
+	<script type="text/javascript">
+		const PLAYFIELD_SIZE_CELLS = 10;
+
+		/**
+		 * You must include the dependency on 'ngMaterial'
+		 */
+		window.ngApp = angular.module('Match3', ['ngMaterial']);
+
+
+		window.ngApp.controller('PlayfieldController', ['$scope', function($scope) {
+
+			const colors = [ 'purple', 'red', 'blue', 'green', 'orange' ];
+
+			const cellAt = (col, row) => {
+				if (col >= PLAYFIELD_SIZE_CELLS || col < 0) {
+					return null;
+				}
+
+				return $scope.cells[row * PLAYFIELD_SIZE_CELLS + col];
+			};
+
+			const randomCell = () => ({
+				color: colors[Math.floor(Math.random() * colors.length)]
+			});
+
+			const cellsMatch = (cellA, cellB) => cellA.content.color == cellB.content.color;
+
+			$scope.collected = {};
+
+			$scope.cells = [...new Array(PLAYFIELD_SIZE_CELLS * PLAYFIELD_SIZE_CELLS)].map((x, index) => ({
+				content: null,
+				col: index % PLAYFIELD_SIZE_CELLS,
+				row: Math.floor(index / PLAYFIELD_SIZE_CELLS)
+			}));
+
+
+			const slideColDown = colIndex => {
+				let anythingMoved = false;
+
+				for (let rowIndex = PLAYFIELD_SIZE_CELLS - 1; rowIndex >= 0; --rowIndex) {
+					const cell = cellAt(colIndex, rowIndex);
+					const cellAbove = cellAt(colIndex, rowIndex - 1);
+
+					if (!cellAbove) {
+						if (!cell.content) {
+							cell.content = randomCell();
+							anythingMoved = true;
+						}
+					}
+					else if (!cell.content && cellAbove.content) {
+						cell.content = cellAbove.content;
+						cellAbove.content = null;
+						anythingMoved = true;
+					}
+				}
+
+				return anythingMoved;
+			};
+
+
+			const slideFieldDown = () => {
+				for (let colIndex = 0; colIndex < PLAYFIELD_SIZE_CELLS; ++colIndex) {
+					while (slideColDown(colIndex)) {
+						;	//	yea, do nothing
+					}
+				}
+			};
+
+
+			const collectAdjacentCellsOfSameColor = (initialCell, cellsCollected) => {
+				cellsCollected = cellsCollected || [ initialCell ];
+
+				const neighbors = [
+					cellAt(initialCell.col - 1, initialCell.row),
+					cellAt(initialCell.col + 1, initialCell.row),
+					cellAt(initialCell.col, initialCell.row + 1),
+					cellAt(initialCell.col, initialCell.row - 1)
+				];
+
+				neighbors.forEach(neigborCell => {
+					if (neigborCell && neigborCell.content && cellsMatch(initialCell, neigborCell) && cellsCollected.indexOf(neigborCell) < 0) {
+						cellsCollected.push(neigborCell);
+						collectAdjacentCellsOfSameColor(neigborCell, cellsCollected);
+					}
+				});
+
+				return cellsCollected;
+			};
+
+
+			const wipeNeighbors = initialCell => {
+				const cells = collectAdjacentCellsOfSameColor(initialCell);
+
+				if (cells.length < 3) {
+					return;
+				}
+
+				cells.forEach(cell => { cell.collected = true; });
+
+				setTimeout(() => {
+					cells.forEach(cell => {
+						cell.collected = false;
+
+						if (!$scope.collected[cell.content.color]) {
+							$scope.collected[cell.content.color] = 0;
+						}
+
+						$scope.collected[cell.content.color] += 1;
+						cell.content = null;
+					});
+
+					slideFieldDown();
+					$scope.$digest();
+				}, 700);
+			};
+
+
+			slideFieldDown();
+
+
+			$scope.slideDown = slideFieldDown;
+
+			$scope.onCellClicked = cell => {
+				wipeNeighbors(cell);
+			};
+
+		}]);
+	</script>
+
+
+</html>
