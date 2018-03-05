@@ -26,9 +26,9 @@
 			animation: disappear .4s;
 		}
 
-		.cell--blocker
-		{
+		.cell--blocker {
 			border-color: black;
+			border-radius: 10px;
 		}
 
 		@keyframes disappear {
@@ -103,7 +103,7 @@
 			$scope.cells = [...new Array(PLAYFIELD_SIZE_CELLS * PLAYFIELD_SIZE_CELLS)].map((x, index) => ({
 				content: null,
 				col: index % PLAYFIELD_SIZE_CELLS,
-				row: Math.floor(index / PLAYFIELD_SIZE_CELLS),
+				row: Math.floor(index / PLAYFIELD_SIZE_CELLS)
 			}));
 
 
@@ -193,8 +193,8 @@
 
 
 			slideFieldDown();
-			$scope.cells.forEach(x=>x.blocker = Math.random()>0.7);
-
+			
+			$scope.cells.forEach(x => { x.blocker = Math.random() > 0.7; } );
 
 			$scope.slideDown = slideFieldDown;
 
