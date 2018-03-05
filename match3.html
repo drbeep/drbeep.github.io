@@ -26,6 +26,11 @@
 			animation: disappear .4s;
 		}
 
+		.cell--blocker
+		{
+			border-color: black;
+		}
+
 		@keyframes disappear {
 			100% { opacity: 0; }
 		}
@@ -44,7 +49,7 @@
 			<div class='cell' ng-repeat='cell in cells'
 				ng-style='{ background: cell.content.color }'
 				ng-click='onCellClicked(cell)'
-				ng-class='{"cell--picked" : cell.collected }'>
+				ng-class='{"cell--picked" : cell.collected, "cell--blocker" : cell.blocker }'>
 			</div>
 		</div>
 
@@ -88,7 +93,7 @@
 			};
 
 			const randomCell = () => ({
-				color: colors[Math.floor(Math.random() * colors.length)]
+				color: colors[Math.floor(Math.random() * colors.length)],
 			});
 
 			const cellsMatch = (cellA, cellB) => cellA.content.color == cellB.content.color;
@@ -98,7 +103,7 @@
 			$scope.cells = [...new Array(PLAYFIELD_SIZE_CELLS * PLAYFIELD_SIZE_CELLS)].map((x, index) => ({
 				content: null,
 				col: index % PLAYFIELD_SIZE_CELLS,
-				row: Math.floor(index / PLAYFIELD_SIZE_CELLS)
+				row: Math.floor(index / PLAYFIELD_SIZE_CELLS),
 			}));
 
 
@@ -115,7 +120,7 @@
 							anythingMoved = true;
 						}
 					}
-					else if (!cell.content && cellAbove.content) {
+					else if (!cell.content && cellAbove.content && !cellAbove.blocker) {
 						cell.content = cellAbove.content;
 						cellAbove.content = null;
 						anythingMoved = true;
@@ -159,7 +164,7 @@
 			const wipeNeighbors = initialCell => {
 				const cells = collectAdjacentCellsOfSameColor(initialCell);
 
-				if (cells.length < 3) {
+				if (cells.length < 2) {
 					return;
 				}
 
@@ -177,6 +182,7 @@
 
 						$scope.collected[cell.content.color] += 1;
 						cell.content = null;
+						cell.blocker = false;
 					});
 
 					slideFieldDown();
@@ -187,6 +193,7 @@
 
 
 			slideFieldDown();
+			$scope.cells.forEach(x=>x.blocker = Math.random()>0.7);
 
 
 			$scope.slideDown = slideFieldDown;
