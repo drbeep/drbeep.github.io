@@ -11,6 +11,10 @@
 		}
 
 		.cell {
+			cursor: pointer;
+			font-size: 25px;
+
+			text-align: center;
 			float: left;
 
 			width: 30px;
@@ -22,11 +26,20 @@
 			outline: none !important;
 		}
 
-		.cell--picked {
+		.cell.cell--empty {
+			cursor: default;
+		}
+
+		.cell.cell--picked {
 			animation: disappear .4s;
 		}
 
-		.cell--blocker {
+		.cell.cell-type--bonus-bomb,
+		.cell.cell-type--bonus-horz-arrow {
+			background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAABZJREFUeNpi2r9//38gYGAEESAAEGAAasgJOgzOKCoAAAAASUVORK5CYII=) !important;
+		}
+
+		.cell.cell-type--blocker {
 			border-color: black;
 			border-radius: 10px;
 		}
@@ -46,16 +59,17 @@
 		<div flex='33'></div>
 
 		<div class='playfield'>
-			<div class='cell' ng-repeat='cell in cells'
+			<div class='cell cell-type--{{ cell.content.type }}' ng-repeat='cell in cells'
 				ng-style='{ background: cell.content.color }'
-				ng-click='onCellClicked(cell)'
-				ng-class='{"cell--picked" : cell.collected, "cell--blocker" : cell.blocker }'>
+				ng-click='cell.content.onClicked(cell)'
+				ng-class='{"cell--picked" : cell.isFadingOut, "cell--empty": !cell.content}'>
+				{{ cell.content.character }}
 			</div>
 		</div>
 
 		<div layout='column' >
 			<h2>Collected</h2>
-			<div ng-repeat='(color, count) in collected'><b>{{:: color}}</b>: {{ count }}</div>
+			<div ng-repeat='(color, count) in cellsCollectedByColor'><b>{{:: color}}</b>: {{ count }}</div>
 		</div>
 	</div>
 </body>
@@ -80,9 +94,14 @@
 		window.ngApp = angular.module('Match3', ['ngMaterial']);
 
 
-		window.ngApp.controller('PlayfieldController', ['$scope', function($scope) {
+		const ALL_POSSIBLE_COLORS = [ 'purple', 'red', 'blue', 'green', 'orange' ];
+		const INVALID_COLOR = 'white';
 
-			const colors = [ 'purple', 'red', 'blue', 'green', 'orange' ];
+		const MIN_CELLS_TO_WIPE = 2;
+
+
+
+		window.ngApp.controller('PlayfieldController', ['$scope', function($scope) {
 
 			const cellAt = (col, row) => {
 				if (col >= PLAYFIELD_SIZE_CELLS || col < 0) {
@@ -92,13 +111,10 @@
 				return $scope.cells[row * PLAYFIELD_SIZE_CELLS + col];
 			};
 
-			const randomCell = () => ({
-				color: colors[Math.floor(Math.random() * colors.length)],
-			});
 
 			const cellsMatch = (cellA, cellB) => cellA.content.color == cellB.content.color;
 
-			$scope.collected = {};
+			$scope.cellsCollectedByColor = {};
 
 			$scope.cells = [...new Array(PLAYFIELD_SIZE_CELLS * PLAYFIELD_SIZE_CELLS)].map((x, index) => ({
 				content: null,
@@ -116,11 +132,11 @@
 
 					if (!cellAbove) {
 						if (!cell.content) {
-							cell.content = randomCell();
+							cell.content = CellsFactory.createNewCellFromTopGenerator();
 							anythingMoved = true;
 						}
 					}
-					else if (!cell.content && cellAbove.content && !cellAbove.blocker) {
+					else if (!cell.content && cellAbove.content && cellAbove.content.canFallDown) {
 						cell.content = cellAbove.content;
 						cellAbove.content = null;
 						anythingMoved = true;
@@ -140,72 +156,178 @@
 			};
 
 
-			const collectAdjacentCellsOfSameColor = (initialCell, cellsCollected) => {
-				cellsCollected = cellsCollected || [ initialCell ];
-
-				const neighbors = [
-					cellAt(initialCell.col - 1, initialCell.row),
-					cellAt(initialCell.col + 1, initialCell.row),
-					cellAt(initialCell.col, initialCell.row + 1),
-					cellAt(initialCell.col, initialCell.row - 1)
-				];
-
-				neighbors.forEach(neigborCell => {
-					if (neigborCell && neigborCell.content && cellsMatch(initialCell, neigborCell) && cellsCollected.indexOf(neigborCell) < 0) {
-						cellsCollected.push(neigborCell);
-						collectAdjacentCellsOfSameColor(neigborCell, cellsCollected);
-					}
-				});
-
-				return cellsCollected;
-			};
-
-
-			const wipeNeighbors = initialCell => {
-				const cells = collectAdjacentCellsOfSameColor(initialCell);
-
-				if (cells.length < 2) {
-					return;
+			const wipeNeighbors = cellsToWipe => {
+				if (cellsToWipe.length < MIN_CELLS_TO_WIPE) {
+					return Promise.resolve({
+						cellsWiped: 0,
+						onPreparationsFinished() {}
+					});
 				}
 
-				cells.forEach(cell => { cell.collected = true; });
+				cellsToWipe.forEach(cell => { cell.isFadingOut = true; });
 
 				$scope.clicksBlocked = true;
 
-				setTimeout(() => {
-					cells.forEach(cell => {
-						cell.collected = false;
+				return new Promise(resolve => setTimeout(() => {
+					cellsToWipe.forEach(cell => {
+						cell.isFadingOut = false;
 
-						if (!$scope.collected[cell.content.color]) {
-							$scope.collected[cell.content.color] = 0;
+						if (cell.content) {
+							if (!$scope.cellsCollectedByColor[cell.content.color]) {
+								$scope.cellsCollectedByColor[cell.content.color] = 0;
+							}
+
+							$scope.cellsCollectedByColor[cell.content.color] += 1;
 						}
-
-						$scope.collected[cell.content.color] += 1;
 						cell.content = null;
-						cell.blocker = false;
 					});
 
-					slideFieldDown();
-					$scope.clicksBlocked = false;
-					$scope.$digest();
-				}, 400);
+					resolve({
+						cellsWiped: cellsToWipe.length,
+						onPreparationsFinished: () => {
+							slideFieldDown();
+							$scope.clicksBlocked = false;
+							$scope.$digest();
+						}
+					});
+
+				}, 400));
 			};
+
+
+
+			const CellsFactory = (function() {
+
+				const BONUSES_FOR_CELLS_DESTROYED = [{
+					priority: 0,
+					canGetThisBonusForAchievement: cellsDestroyed => cellsDestroyed >= 4,
+					create: () => api.createArrowBombCell()
+				}, {
+					priority: 1,
+					canGetThisBonusForAchievement: cellsDestroyed => cellsDestroyed >= 5,
+					create: () => api.createRoundBombCell()
+				}];
+
+
+
+
+				const collectAllAdjacentCells = initialCell => $scope.cells.filter(cell => Math.abs(cell.row - initialCell.row) + Math.abs(cell.col - initialCell.col) <= 2);
+
+
+				const collectTheWholeRowOfACell = initialCell => $scope.cells.filter(cell => cell.row == initialCell.row);
+
+
+				const collectAdjacentCellsOfSameColor = (initialCell, cellsCollected) => {
+					cellsCollected = cellsCollected || [ initialCell ];
+
+					const neighbors = [
+						cellAt(initialCell.col - 1, initialCell.row),
+						cellAt(initialCell.col + 1, initialCell.row),
+						cellAt(initialCell.col, initialCell.row + 1),
+						cellAt(initialCell.col, initialCell.row - 1)
+					];
+
+					neighbors.forEach(neighborCell => {
+						if (neighborCell && neighborCell.content && cellsMatch(initialCell, neighborCell) && cellsCollected.indexOf(neighborCell) < 0) {
+							cellsCollected.push(neighborCell);
+							collectAdjacentCellsOfSameColor(neighborCell, cellsCollected);
+						}
+					});
+
+					return cellsCollected;
+				};
+
+
+				const api = {
+					createNewCellFromTopGenerator() {
+						return {
+							color: ALL_POSSIBLE_COLORS[Math.floor(Math.random() * ALL_POSSIBLE_COLORS.length)],
+							type: 'generic',
+							canFallDown: true,
+
+							onClicked(self) {
+								if ($scope.clicksBlocked) {
+									return;
+								}
+
+								const cellsToWipe = collectAdjacentCellsOfSameColor(self);
+
+								wipeNeighbors(cellsToWipe).then(neighborsWipeResult => {
+									const bonusesMightBeCreated = BONUSES_FOR_CELLS_DESTROYED.filter(bonuse => bonuse.canGetThisBonusForAchievement(neighborsWipeResult.cellsWiped));
+									bonusesMightBeCreated.sort((a, b) => a.priority - b.priority);
+
+									const bonusToCreate = bonusesMightBeCreated.pop();
+
+									if (bonusToCreate) {
+										self.content = bonusToCreate.create();
+									}
+
+									neighborsWipeResult.onPreparationsFinished();
+								});
+							}
+						};
+					},
+
+					createBlockerCell() {
+						return {
+							color: ALL_POSSIBLE_COLORS[Math.floor(Math.random() * ALL_POSSIBLE_COLORS.length)],
+							type: 'blocker',
+							canFallDown: false,
+
+							onClicked(self) {
+								;	//	yea, do nothing
+							}
+						};
+					},
+
+
+					createArrowBombCell() {
+						return {
+							color: INVALID_COLOR,
+							type: 'bonus-horz-arrow',
+							character: '⇿',
+							canFallDown: true,
+
+							onClicked(self) {
+								const cellsToWipe = collectTheWholeRowOfACell(self);
+								wipeNeighbors(cellsToWipe).then(neighborsWipeResult => {
+									neighborsWipeResult.onPreparationsFinished();
+								});
+							}
+						};
+					},
+
+
+					createRoundBombCell() {
+						return {
+							color: INVALID_COLOR,
+							type: 'bonus-bomb',
+							character: '☠',
+							canFallDown: true,
+
+							onClicked(self) {
+								const cellsToWipe = collectAllAdjacentCells(self);
+								wipeNeighbors(cellsToWipe).then(neighborsWipeResult => {
+									neighborsWipeResult.onPreparationsFinished();
+								});
+							}
+						};
+					},
+				};
+
+
+				return api;
+			})();
+
 
 
 			slideFieldDown();
-			
-			$scope.cells.forEach(x => { x.blocker = Math.random() > 0.7; } );
 
-			$scope.slideDown = slideFieldDown;
-
-			$scope.onCellClicked = cell => {
-				if ($scope.clicksBlocked) {
-					return;
+			$scope.cells.forEach(cell => {
+				if (Math.random() > 0.8) {
+					cell.content = CellsFactory.createBlockerCell();
 				}
-
-				wipeNeighbors(cell);
-			};
-
+			});
 		}]);
 	</script>
 
