@@ -84,27 +84,6 @@
 
 			const colors = [ 'purple', 'red', 'blue', 'green', 'orange' ];
 
-			const cellTypes = [
-				{
-					// std
-					cellsCount: 2,
-					actions: {
-						action: x => stdAction(x),
-						ctor: () => null
-					}
-				},
-				{
-					cellsCount: 3,
-					actions: {
-						action: x => collectLine(x),
-						ctor: () => ({ color: 'black' })
-					}
-				}
-			];
-
-			const defaultActions = cellTypes[0].actions;
-			const getCellActions = x => cellTypes.filter(bonusType => x >= bonusType.cellsCount).pop().actions
-
 			const cellAt = (col, row) => {
 				if (col >= PLAYFIELD_SIZE_CELLS || col < 0) {
 					return null;
@@ -114,7 +93,7 @@
 			};
 
 			const randomCell = () => ({
-				color: colors[Math.floor(Math.random() * colors.length)]
+				color: colors[Math.floor(Math.random() * colors.length)],
 			});
 
 			const cellsMatch = (cellA, cellB) => cellA.content.color == cellB.content.color;
@@ -124,8 +103,7 @@
 			$scope.cells = [...new Array(PLAYFIELD_SIZE_CELLS * PLAYFIELD_SIZE_CELLS)].map((x, index) => ({
 				content: null,
 				col: index % PLAYFIELD_SIZE_CELLS,
-				row: Math.floor(index / PLAYFIELD_SIZE_CELLS),
-				actions: defaultActions
+				row: Math.floor(index / PLAYFIELD_SIZE_CELLS)
 			}));
 
 
@@ -139,17 +117,12 @@
 					if (!cellAbove) {
 						if (!cell.content) {
 							cell.content = randomCell();
-							cell.actions = defaultActions;
 							anythingMoved = true;
 						}
 					}
 					else if (!cell.content && cellAbove.content && !cellAbove.blocker) {
 						cell.content = cellAbove.content;
 						cellAbove.content = null;
-
-						cell.actions = cellAbove.actions;
-						cellAbove.actions = null;
-
 						anythingMoved = true;
 					}
 				}
@@ -166,11 +139,6 @@
 				}
 			};
 
-			const stdAction = (cell) => {
-				let result = collectAdjacentCellsOfSameColor(cell);
-				cell.actions = getCellActions(result.length);
-				return result;
-			}
 
 			const collectAdjacentCellsOfSameColor = (initialCell, cellsCollected) => {
 				cellsCollected = cellsCollected || [ initialCell ];
@@ -192,16 +160,9 @@
 				return cellsCollected;
 			};
 
-			const collectLine = (cell) =>
-			{
-				var direction = Math.random()>.5;
-				cell.actions = defaultActions
-				return $scope.cells.filter(x=>(direction && x.row == cell.row) || (!direction && x.col == cell.col) )
-			}
-
 
 			const wipeNeighbors = initialCell => {
-				const cells = initialCell.actions.action(initialCell);
+				const cells = collectAdjacentCellsOfSameColor(initialCell);
 
 				if (cells.length < 2) {
 					return;
@@ -220,7 +181,7 @@
 						}
 
 						$scope.collected[cell.content.color] += 1;
-						cell.content = cell.actions.ctor();
+						cell.content = null;
 						cell.blocker = false;
 					});
 
