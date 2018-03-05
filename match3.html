@@ -26,8 +26,7 @@
 			animation: disappear .4s;
 		}
 
-		.cell--blocker
-		{
+		.cell--blocker {
 			border-color: black;
 			border-radius: 10px;
 		}
@@ -233,8 +232,8 @@
 
 
 			slideFieldDown();
-			$scope.cells.forEach(x=>x.blocker = Math.random()>0.7);
-
+			
+			$scope.cells.forEach(x => { x.blocker = Math.random() > 0.7; } );
 
 			$scope.slideDown = slideFieldDown;
 
