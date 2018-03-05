@@ -29,6 +29,7 @@
 		.cell--blocker
 		{
 			border-color: black;
+			border-radius: 10px;
 		}
 
 		@keyframes disappear {
@@ -84,6 +85,16 @@
 
 			const colors = [ 'purple', 'red', 'blue', 'green', 'orange' ];
 
+			const cellTypes = [
+				{
+					// std
+					cellsCount: 2,
+					action: (currentCell) => collectAdjacentCellsOfSameColor(currentCell)
+				}
+			];
+
+			const deffaultAction = cellTypes[0].action;
+
 			const cellAt = (col, row) => {
 				if (col >= PLAYFIELD_SIZE_CELLS || col < 0) {
 					return null;
@@ -103,7 +114,8 @@
 			$scope.cells = [...new Array(PLAYFIELD_SIZE_CELLS * PLAYFIELD_SIZE_CELLS)].map((x, index) => ({
 				content: null,
 				col: index % PLAYFIELD_SIZE_CELLS,
-				row: Math.floor(index / PLAYFIELD_SIZE_CELLS)
+				row: Math.floor(index / PLAYFIELD_SIZE_CELLS),
+				action: deffaultAction
 			}));
 
 
@@ -139,7 +151,7 @@
 				}
 			};
 
-
+			
 			const collectAdjacentCellsOfSameColor = (initialCell, cellsCollected) => {
 				cellsCollected = cellsCollected || [ initialCell ];
 
@@ -162,7 +174,7 @@
 
 
 			const wipeNeighbors = initialCell => {
-				const cells = collectAdjacentCellsOfSameColor(initialCell);
+				const cells = initialCell.action(initialCell);
 
 				if (cells.length < 2) {
 					return;
