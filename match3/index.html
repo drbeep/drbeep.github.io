@@ -3,112 +3,12 @@
 <head>
 	<title>Match3 analyzer</title>
 	<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.0/angular-material.min.css">
+	<link rel="stylesheet" href="css/cells.css">
 
 	<style>
 		.playfield {
 			padding: 1em;
 			width: calc(34px * 9);
-		}
-
-		.cell {
-			cursor: pointer;
-			font-size: 25px;
-
-			text-align: center;
-			float: left;
-
-			width: 30px;
-			height: 30px;
-
-			background: #eee;
-
-			outline: none !important;
-
-			border: 1px solid white;
-			border-radius: 5px;
-
-			margin: 1px;
-		}
-
-		.cell.cell--empty {
-			cursor: default;
-		}
-
-		.cell.cell--picked {
-			animation: disappear .4s;
-		}
-
-		.cell.cell-type--bonus-bomb,
-		.cell.cell-type--bonus-horz-arrow {
-			background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAABZJREFUeNpi2r9//38gYGAEESAAEGAAasgJOgzOKCoAAAAASUVORK5CYII=) !important;
-		}
-
-		.cell.cell-color--red {
-			background-image: url(img/tiles.png) !important;
-			background-position: -87px -3px;
-			border-color: red;
-		}
-
-		.cell.cell-color--blue {
-			background-image: url(img/tiles.png) !important;
-			background-position: -170px -3px;
-			border-color: blue;
-		}
-
-		.cell.cell-color--orange {
-			background-image: url(img/tiles.png) !important;
-			background-position: -254px -3px;
-			border-color: orange;
-		}
-
-		.cell.cell-color--purple {
-			background-image: url(img/tiles.png) !important;
-			background-position: -129px -3px;
-			border-color: purple;
-		}
-
-		.cell.cell-color--green {
-			background-image: url(img/tiles.png) !important;
-			background-position: -3px -3px;
-			border-color: green;
-		}
-
-		.cell.cell-type--blocker {
-		}
-
-
-		.cell.cell-type--blocker.cell-color--red {
-			background-image: url(img/blockers.png) !important;
-			background-position: -87px -3px;
-			border-color: red;
-		}
-
-		.cell.cell-type--blocker.cell-color--blue {
-			background-image: url(img/blockers.png) !important;
-			background-position: -170px -3px;
-			border-color: blue;
-		}
-
-		.cell.cell-type--blocker.cell-color--orange {
-			background-image: url(img/blockers.png) !important;
-			background-position: -254px -3px;
-			border-color: orange;
-		}
-
-		.cell.cell-type--blocker.cell-color--purple {
-			background-image: url(img/blockers.png) !important;
-			background-position: -129px -3px;
-			border-color: purple;
-		}
-
-		.cell.cell-type--blocker.cell-color--green {
-			background-image: url(img/blockers.png) !important;
-			background-position: -3px -3px;
-			border-color: green;
-		}
-
-		@keyframes disappear {
-			100% { opacity: 0; }
 		}
 	</style>
 </head>
@@ -147,7 +47,6 @@
 	<!-- Angular Material Library -->
 	<script src="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.0/angular-material.min.js"></script>
 
-	<!-- Your application bootstrap  -->
 	<script type="text/javascript">
 		const PLAYFIELD_SIZE_CELLS = 9;
 
@@ -164,26 +63,66 @@
 
 
 
-		window.ngApp.controller('PlayfieldController', ['$scope', function($scope) {
+		const cellOfFieldAt = (field, col, row) => {
+			if (col >= PLAYFIELD_SIZE_CELLS || col < 0) {
+				return null;
+			}
 
-			const cellAt = (col, row) => {
-				if (col >= PLAYFIELD_SIZE_CELLS || col < 0) {
-					return null;
-				}
-
-				return $scope.cells[row * PLAYFIELD_SIZE_CELLS + col];
-			};
+			return field[row * PLAYFIELD_SIZE_CELLS + col];
+		};
 
 
-			const cellsMatch = (cellA, cellB) => cellA.content.color == cellB.content.color;
 
-			$scope.cellsCollectedByColor = {};
+		/*
 
-			$scope.cells = [...new Array(PLAYFIELD_SIZE_CELLS * PLAYFIELD_SIZE_CELLS)].map((x, index) => ({
+			levelDescriptor is expected to be like {
+				cells: [{
+					col: 0,
+					row: 1,
+					content: {
+						type: 'blocker',
+						arguments: [ 'red' ]
+					}
+				}]
+			}
+		*/
+		const createCellsFromPredefinedLevel = (CellsFactory, levelDescriptor) => {
+			const cells = [...new Array(PLAYFIELD_SIZE_CELLS * PLAYFIELD_SIZE_CELLS)].map((x, index) => ({
 				content: null,
 				col: index % PLAYFIELD_SIZE_CELLS,
 				row: Math.floor(index / PLAYFIELD_SIZE_CELLS)
 			}));
+
+			levelDescriptor.cells.forEach(cellRecord => {
+				cells[cellRecord.row * PLAYFIELD_SIZE_CELLS + cellRecord.col].content = CellsFactory.deserializeCell(cellRecord.content);
+			});
+
+			//	BEWARE: this randomization is probably going to be reworked
+			cells.forEach(cell => {
+				if (cell.content) {
+					return;
+				}
+
+				if (Math.random() > 0.8) {
+					cell.content = CellsFactory.createBlockerCell();
+				}
+				else if (Math.random() > 0.98) {
+					cell.content = CellsFactory.createUnremovableBlockerCell();
+				}
+				else {
+					cell.content = CellsFactory.createGenericCell();
+				}
+			});
+
+			return cells;
+		};
+
+
+
+		window.ngApp.controller('PlayfieldController', ['$scope', function($scope) {
+			const cellsMatch = (cellA, cellB) => cellA.content.color == cellB.content.color;
+
+			$scope.cellsCollectedByColor = {};
 
 
 			const slideColDown = colIndex => {
@@ -195,7 +134,7 @@
 
 					if (!cellAbove) {
 						if (!cell.content) {
-							cell.content = CellsFactory.createNewCellFromTopGenerator();
+							cell.content = CellsFactory.createGenericCell();
 							anythingMoved = true;
 						}
 					}
@@ -219,20 +158,20 @@
 			};
 
 
-			const wipeNeighbors = cellsToWipe => {
-				if (cellsToWipe.length < MIN_CELLS_TO_WIPE) {
+			const collectCells = cellsToBeCollected => {
+				if (cellsToBeCollected.length < MIN_CELLS_TO_WIPE) {
 					return Promise.resolve({
 						cellsWiped: 0,
 						onPreparationsFinished() {}
 					});
 				}
 
-				cellsToWipe.forEach(cell => { cell.isFadingOut = true; });
+				cellsToBeCollected.forEach(cell => { cell.isFadingOut = true; });
 
 				$scope.clicksBlocked = true;
 
 				return new Promise(resolve => setTimeout(() => {
-					cellsToWipe.forEach(cell => {
+					cellsToBeCollected.forEach(cell => {
 						cell.isFadingOut = false;
 
 						if (cell.content) {
@@ -246,7 +185,7 @@
 					});
 
 					resolve({
-						cellsWiped: cellsToWipe.length,
+						cellsWiped: cellsToBeCollected.length,
 						onPreparationsFinished: () => {
 							slideFieldDown();
 							$scope.clicksBlocked = false;
@@ -270,8 +209,6 @@
 					canGetThisBonusForAchievement: cellsDestroyed => cellsDestroyed >= 5,
 					create: () => api.createRoundBombCell()
 				}];
-
-
 
 
 				const collectAllAdjacentCells = initialCell => $scope.cells.filter(cell => Math.abs(cell.row - initialCell.row) + Math.abs(cell.col - initialCell.col) <= 2);
@@ -302,7 +239,7 @@
 
 
 				const api = {
-					createNewCellFromTopGenerator() {
+					createGenericCell() {
 						return {
 							color: ALL_POSSIBLE_COLORS[Math.floor(Math.random() * ALL_POSSIBLE_COLORS.length)],
 							type: 'generic',
@@ -313,9 +250,9 @@
 									return;
 								}
 
-								const cellsToWipe = collectAdjacentCellsOfSameColor(self);
+								const cellsToBeCollected = collectAdjacentCellsOfSameColor(self);
 
-								wipeNeighbors(cellsToWipe).then(neighborsWipeResult => {
+								collectCells(cellsToBeCollected).then(neighborsWipeResult => {
 									const bonusesMightBeCreated = BONUSES_FOR_CELLS_DESTROYED.filter(bonuse => bonuse.canGetThisBonusForAchievement(neighborsWipeResult.cellsWiped));
 									bonusesMightBeCreated.sort((a, b) => a.priority - b.priority);
 
@@ -331,10 +268,23 @@
 						};
 					},
 
-					createBlockerCell() {
+					createBlockerCell(color) {
 						return {
-							color: ALL_POSSIBLE_COLORS[Math.floor(Math.random() * ALL_POSSIBLE_COLORS.length)],
+							color: color || ALL_POSSIBLE_COLORS[Math.floor(Math.random() * ALL_POSSIBLE_COLORS.length)],
 							type: 'blocker',
+							canFallDown: false,
+
+							onClicked(self) {
+								;	//	yea, do nothing
+							}
+						};
+					},
+
+
+					createUnremovableBlockerCell() {
+						return {
+							color: INVALID_COLOR,
+							type: 'unremovable-blocker',
 							canFallDown: false,
 
 							onClicked(self) {
@@ -352,8 +302,8 @@
 							canFallDown: true,
 
 							onClicked(self) {
-								const cellsToWipe = collectTheWholeRowOfACell(self);
-								wipeNeighbors(cellsToWipe).then(neighborsWipeResult => {
+								const cellsToBeCollected = collectTheWholeRowOfACell(self);
+								collectCells(cellsToBeCollected).then(neighborsWipeResult => {
 									neighborsWipeResult.onPreparationsFinished();
 								});
 							}
@@ -369,13 +319,30 @@
 							canFallDown: true,
 
 							onClicked(self) {
-								const cellsToWipe = collectAllAdjacentCells(self);
-								wipeNeighbors(cellsToWipe).then(neighborsWipeResult => {
+								const cellsToBeCollected = collectAllAdjacentCells(self);
+								collectCells(cellsToBeCollected).then(neighborsWipeResult => {
 									neighborsWipeResult.onPreparationsFinished();
 								});
 							}
 						};
-					},
+					}
+				};
+
+
+				api.deserializeCell = serializedCell => {
+					const constructorsByTypeName = {
+						'generic': api.createGenericCell,
+						'blocker': api.createBlockerCell,
+						'unremovable-blocker': api.createUnremovableBlockerCell,
+						'bonus-horz-arrow': api.createArrowBombCell,
+						'bonus-bomb': api.createRoundBombCell
+					};
+
+					if (!constructorsByTypeName[serializedCell.type]) {
+						throw new Error(`Unknown cell type: ${serializedCell.type}`);
+					}
+
+					return constructorsByTypeName[serializedCell.type].apply(null, serializedCell.arguments);
 				};
 
 
@@ -383,14 +350,40 @@
 			})();
 
 
+			const HARDCODED_LEVEL_SAMPLE = {
+				cells: [{
+					row: 3,
+					col: 3,
+					content: { type: 'unremovable-blocker' }
+				}, {
+					row: 3,
+					col: 4,
+					content: { type: 'unremovable-blocker' }
+				}, {
+					row: 3,
+					col: 8,
+					content: { type: 'bonus-horz-arrow' }
+				}, {
+					row: 4,
+					col: 4,
+					content: { type: 'blocker', arguments: [ 'red' ] }
+				}, {
+					row: 4,
+					col: 5,
+					content: { type: 'blocker', arguments: [ 'red' ] }
+				}, {
+					row: 4,
+					col: 6,
+					content: { type: 'blocker', arguments: [ 'red' ] }
+				}]
+			};
+
+			$scope.cells = createCellsFromPredefinedLevel(CellsFactory, HARDCODED_LEVEL_SAMPLE);
+
+			const cellAt = cellOfFieldAt.bind(null, $scope.cells);
+
 
 			slideFieldDown();
-
-			$scope.cells.forEach(cell => {
-				if (Math.random() > 0.8) {
-					cell.content = CellsFactory.createBlockerCell();
-				}
-			});
 		}]);
 	</script>
 
