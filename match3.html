@@ -7,7 +7,7 @@
 	<style>
 		.playfield {
 			padding: 1em;
-			width: calc(32px * 9);
+			width: calc(34px * 9);
 		}
 
 		.cell {
@@ -20,10 +20,14 @@
 			width: 30px;
 			height: 30px;
 
-			border: 1px solid white;
 			background: #eee;
 
 			outline: none !important;
+
+			border: 1px solid white;
+			border-radius: 5px;
+
+			margin: 1px;
 		}
 
 		.cell.cell--empty {
@@ -39,9 +43,68 @@
 			background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAABZJREFUeNpi2r9//38gYGAEESAAEGAAasgJOgzOKCoAAAAASUVORK5CYII=) !important;
 		}
 
+		.cell.cell-color--red {
+			background-image: url(img/tiles.png) !important;
+			background-position: -87px -3px;
+			border-color: red;
+		}
+
+		.cell.cell-color--blue {
+			background-image: url(img/tiles.png) !important;
+			background-position: -170px -3px;
+			border-color: blue;
+		}
+
+		.cell.cell-color--orange {
+			background-image: url(img/tiles.png) !important;
+			background-position: -254px -3px;
+			border-color: orange;
+		}
+
+		.cell.cell-color--purple {
+			background-image: url(img/tiles.png) !important;
+			background-position: -129px -3px;
+			border-color: purple;
+		}
+
+		.cell.cell-color--green {
+			background-image: url(img/tiles.png) !important;
+			background-position: -3px -3px;
+			border-color: green;
+		}
+
 		.cell.cell-type--blocker {
-			border-color: black;
-			border-radius: 10px;
+		}
+
+
+		.cell.cell-type--blocker.cell-color--red {
+			background-image: url(img/blockers.png) !important;
+			background-position: -87px -3px;
+			border-color: red;
+		}
+
+		.cell.cell-type--blocker.cell-color--blue {
+			background-image: url(img/blockers.png) !important;
+			background-position: -170px -3px;
+			border-color: blue;
+		}
+
+		.cell.cell-type--blocker.cell-color--orange {
+			background-image: url(img/blockers.png) !important;
+			background-position: -254px -3px;
+			border-color: orange;
+		}
+
+		.cell.cell-type--blocker.cell-color--purple {
+			background-image: url(img/blockers.png) !important;
+			background-position: -129px -3px;
+			border-color: purple;
+		}
+
+		.cell.cell-type--blocker.cell-color--green {
+			background-image: url(img/blockers.png) !important;
+			background-position: -3px -3px;
+			border-color: green;
 		}
 
 		@keyframes disappear {
@@ -59,8 +122,8 @@
 		<div flex='33'></div>
 
 		<div class='playfield'>
-			<div class='cell cell-type--{{ cell.content.type }}' ng-repeat='cell in cells'
-				ng-style='{ background: cell.content.color }'
+			<div class='cell cell-type--{{ cell.content.type }} cell-color--{{ cell.content.color }}' ng-repeat='cell in cells'
+				ng-style='{ "background-color": cell.content.color }'
 				ng-click='cell.content.onClicked(cell)'
 				ng-class='{"cell--picked" : cell.isFadingOut, "cell--empty": !cell.content}'>
 				{{ cell.content.character }}
