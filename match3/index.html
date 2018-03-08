@@ -203,7 +203,9 @@
 				const BONUSES_FOR_CELLS_DESTROYED = [{
 					priority: 0,
 					canGetThisBonusForAchievement: cellsDestroyed => cellsDestroyed >= 6,
-					create: (cellContent) => api.createArrowBombCell()
+					create: (cellContent) => Math.random() > .5
+						? api.createRowArrowBombCell()
+						: api.createColArrowBombCell()
 				}, {
 					priority: 1,
 					canGetThisBonusForAchievement: cellsDestroyed => cellsDestroyed >= 7,
@@ -218,6 +220,8 @@
 				const collectAllAdjacentCells = initialCell => $scope.cells.filter(cell => Math.abs(cell.row - initialCell.row) + Math.abs(cell.col - initialCell.col) <= 2);
 
 				const collectTheWholeRowOfACell = initialCell => $scope.cells.filter(cell => cell.row == initialCell.row);
+				
+				const collectTheWholeColOfACell = initialCell => $scope.cells.filter(cell => cell.col == initialCell.col);
 
 				const collectAllCellsWithSameColor = initialCell => $scope.cells.filter(cell => cell.content && cell.content.color == initialCell.content.color)
 
@@ -300,7 +304,7 @@
 					},
 
 
-					createArrowBombCell() {
+					createRowArrowBombCell() {
 						return {
 							color: INVALID_COLOR,
 							type: 'bonus-horz-arrow',
@@ -309,6 +313,23 @@
 
 							onClicked(self) {
 								const cellsToBeCollected = collectTheWholeRowOfACell(self);
+								collectCells(cellsToBeCollected).then(neighborsWipeResult => {
+									neighborsWipeResult.onPreparationsFinished();
+								});
+							}
+						};
+					},
+
+
+					createColArrowBombCell() {
+						return {
+							color: INVALID_COLOR,
+							type: 'bonus-vert-arrow',
+							character: '↕',
+							canFallDown: true,
+
+							onClicked(self) {
+								const cellsToBeCollected = collectTheWholeColOfACell(self);
 								collectCells(cellsToBeCollected).then(neighborsWipeResult => {
 									neighborsWipeResult.onPreparationsFinished();
 								});
@@ -358,7 +379,8 @@
 						'generic': api.createGenericCell,
 						'blocker': api.createBlockerCell,
 						'unremovable-blocker': api.createUnremovableBlockerCell,
-						'bonus-horz-arrow': api.createArrowBombCell,
+						'bonus-horz-arrow': api.createRowArrowBombCell,
+						'bonus-vert-arrow': api.createColArrowBombCell,
 						'bonus-bomb': api.createRoundBombCell
 					};
 
@@ -376,26 +398,26 @@
 
 			const HARDCODED_LEVEL_SAMPLE = {
 				cells: [{
-					row: 3,
-					col: 3,
-					content: { type: 'unremovable-blocker' }
-				}, {
-					row: 3,
-					col: 4,
-					content: { type: 'unremovable-blocker' }
-				}, {
-					row: 3,
-					col: 8,
-					content: { type: 'bonus-horz-arrow' }
-				}, {
-					row: 4,
-					col: 4,
-					content: { type: 'blocker', arguments: [ 'red' ] }
-				}, {
-					row: 4,
-					col: 5,
-					content: { type: 'blocker', arguments: [ 'red' ] }
-				}, {
+				// 	row: 3,
+				// 	col: 3,
+				// 	content: { type: 'unremovable-blocker' }
+				// }, {
+				// 	row: 3,
+				// 	col: 4,
+				// 	content: { type: 'unremovable-blocker' }
+				// }, {
+				// 	row: 3,
+				// 	col: 8,
+				// 	content: { type: 'bonus-horz-arrow' }
+				// }, {
+				// 	row: 4,
+				// 	col: 4,
+				// 	content: { type: 'blocker', arguments: [ 'red' ] }
+				// }, {
+				// 	row: 4,
+				// 	col: 5,
+				// 	content: { type: 'blocker', arguments: [ 'red' ] }
+				// }, {
 					row: 4,
 					col: 6,
 					content: { type: 'blocker', arguments: [ 'red' ] }
