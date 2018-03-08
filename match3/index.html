@@ -227,7 +227,7 @@
 
 
 				const collectAdjacentCellsOfSameColor = (initialCell, cellsCollected) => {
-					cellsCollected = cellsCollected || [ initialCell ];
+					cellsCollected = cellsCollected || [initialCell];
 
 					const neighbors = [
 						cellAt(initialCell.col - 1, initialCell.row),
@@ -239,11 +239,16 @@
 					neighbors.forEach(neighborCell => {
 						if (neighborCell && neighborCell.content && cellsMatch(initialCell, neighborCell) && cellsCollected.indexOf(neighborCell) < 0) {
 							cellsCollected.push(neighborCell);
-							collectAdjacentCellsOfSameColor(neighborCell, cellsCollected);
+
+							if (neighborCell.content.type != 'blocker') {
+								collectAdjacentCellsOfSameColor(neighborCell, cellsCollected);
+							}
 						}
 					});
 
-					return cellsCollected;
+					return cellsCollected.filter(x => x.content.type != 'blocker').length < MIN_CELLS_TO_WIPE
+						? cellsCollected.filter(x => x.content.type != 'blocker')
+						: cellsCollected;
 				};
 
 
@@ -398,26 +403,26 @@
 
 			const HARDCODED_LEVEL_SAMPLE = {
 				cells: [{
-				// 	row: 3,
-				// 	col: 3,
-				// 	content: { type: 'unremovable-blocker' }
-				// }, {
-				// 	row: 3,
-				// 	col: 4,
-				// 	content: { type: 'unremovable-blocker' }
-				// }, {
-				// 	row: 3,
-				// 	col: 8,
-				// 	content: { type: 'bonus-horz-arrow' }
-				// }, {
-				// 	row: 4,
-				// 	col: 4,
-				// 	content: { type: 'blocker', arguments: [ 'red' ] }
-				// }, {
-				// 	row: 4,
-				// 	col: 5,
-				// 	content: { type: 'blocker', arguments: [ 'red' ] }
-				// }, {
+					row: 3,
+					col: 3,
+					content: { type: 'unremovable-blocker' }
+				}, {
+					row: 3,
+					col: 4,
+					content: { type: 'unremovable-blocker' }
+				}, {
+					row: 3,
+					col: 8,
+					content: { type: 'bonus-horz-arrow' }
+				}, {
+					row: 4,
+					col: 4,
+					content: { type: 'blocker', arguments: [ 'red' ] }
+				}, {
+					row: 4,
+					col: 5,
+					content: { type: 'blocker', arguments: [ 'red' ] }
+				}, {
 					row: 4,
 					col: 6,
 					content: { type: 'blocker', arguments: [ 'red' ] }
