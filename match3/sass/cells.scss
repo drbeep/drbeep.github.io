@@ -24,8 +24,21 @@
 }
 
 .cell--picked {
-	animation: disappear .4s;
+	animation: disappear 1s;
 }
+
+
+.cell-type--bonus-color-lightning {
+	animation: text-blink .6s;
+	animation-iteration-count: infinite;
+}
+
+@keyframes text-blink {
+	0% { color: white; }
+	50% { color: transparent; }
+	100% { color: white; }
+}
+
 
 .cell-type--bonus-bomb,
 .cell-type--bonus-horz-arrow {
