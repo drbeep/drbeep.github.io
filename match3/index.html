@@ -202,19 +202,24 @@
 
 				const BONUSES_FOR_CELLS_DESTROYED = [{
 					priority: 0,
-					canGetThisBonusForAchievement: cellsDestroyed => cellsDestroyed >= 4,
-					create: () => api.createArrowBombCell()
+					canGetThisBonusForAchievement: cellsDestroyed => cellsDestroyed >= 6,
+					create: (cellContent) => api.createArrowBombCell()
 				}, {
 					priority: 1,
-					canGetThisBonusForAchievement: cellsDestroyed => cellsDestroyed >= 5,
-					create: () => api.createRoundBombCell()
+					canGetThisBonusForAchievement: cellsDestroyed => cellsDestroyed >= 7,
+					create: (cellContent) => api.createRoundBombCell()
+				}, {
+					priority: 2,
+					canGetThisBonusForAchievement: cellsDestroyed => cellsDestroyed >= 3,
+					create: (cellContent) => api.createColorLightningCell(cellContent)
 				}];
 
 
 				const collectAllAdjacentCells = initialCell => $scope.cells.filter(cell => Math.abs(cell.row - initialCell.row) + Math.abs(cell.col - initialCell.col) <= 2);
 
-
 				const collectTheWholeRowOfACell = initialCell => $scope.cells.filter(cell => cell.row == initialCell.row);
+
+				const collectAllCellsWithSameColor = initialCell => $scope.cells.filter(cell => cell.content && cell.content.color == initialCell.content.color)
 
 
 				const collectAdjacentCellsOfSameColor = (initialCell, cellsCollected) => {
@@ -251,6 +256,7 @@
 								}
 
 								const cellsToBeCollected = collectAdjacentCellsOfSameColor(self);
+								let initialCellContent = self.content;
 
 								collectCells(cellsToBeCollected).then(neighborsWipeResult => {
 									const bonusesMightBeCreated = BONUSES_FOR_CELLS_DESTROYED.filter(bonuse => bonuse.canGetThisBonusForAchievement(neighborsWipeResult.cellsWiped));
@@ -259,7 +265,7 @@
 									const bonusToCreate = bonusesMightBeCreated.pop();
 
 									if (bonusToCreate) {
-										self.content = bonusToCreate.create();
+										self.content = bonusToCreate.create(initialCellContent);
 									}
 
 									neighborsWipeResult.onPreparationsFinished();
@@ -325,6 +331,24 @@
 								});
 							}
 						};
+					},
+
+
+					createColorLightningCell(cellContent) {
+						return {
+							color: cellContent.color,
+							type: 'bonus-color-lightning',
+							character: '⚡',
+							canFallDown: true,
+
+							onClicked(self) {
+								const cellsToBeCollected = collectAllCellsWithSameColor(self);
+
+								collectCells(cellsToBeCollected).then(neighborsWipeResult => {
+									neighborsWipeResult.onPreparationsFinished();
+								});
+							}
+						}
 					}
 				};
 
