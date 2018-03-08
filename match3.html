@@ -262,27 +262,25 @@
 			const CellsFactory = (function() {
 
 				const BONUSES_FOR_CELLS_DESTROYED = [{
-						priority: 0,
-						canGetThisBonusForAchievement: cellsDestroyed => cellsDestroyed >= 6,
-						create: (self) => api.createArrowBombCell()
-					}, {
-						priority: 1,
-						canGetThisBonusForAchievement: cellsDestroyed => cellsDestroyed >= 7,
-						create: (self) => api.createRoundBombCell()
-					}, {
-						priority: -1,
-						canGetThisBonusForAchievement: cellsDestroyed => cellsDestroyed >= 3,
-						create: (self) => api.createColorLightningCell(self)
-					}];
-
-
+					priority: 0,
+					canGetThisBonusForAchievement: cellsDestroyed => cellsDestroyed >= 6,
+					create: (cellContent) => api.createArrowBombCell()
+				}, {
+					priority: 1,
+					canGetThisBonusForAchievement: cellsDestroyed => cellsDestroyed >= 7,
+					create: (cellContent) => api.createRoundBombCell()
+				}, {
+					priority: 2,
+					canGetThisBonusForAchievement: cellsDestroyed => cellsDestroyed >= 3,
+					create: (cellContent) => api.createColorLightningCell(cellContent)
+				}];
 
 
 				const collectAllAdjacentCells = initialCell => $scope.cells.filter(cell => Math.abs(cell.row - initialCell.row) + Math.abs(cell.col - initialCell.col) <= 2);
 
 				const collectTheWholeRowOfACell = initialCell => $scope.cells.filter(cell => cell.row == initialCell.row);
 
-				const collectAllCellsWithSameColor = initialCell => $scope.cells.filter(cell => cell.content.color == initialCell.color)
+				const collectAllCellsWithSameColor = initialCell => $scope.cells.filter(cell => cell.content && cell.content.color == initialCell.content.color)
 
 
 				const collectAdjacentCellsOfSameColor = (initialCell, cellsCollected) => {
@@ -319,6 +317,8 @@
 								}
 
 								const cellsToWipe = collectAdjacentCellsOfSameColor(self);
+								
+								let initialCellContent = self.content;
 
 								wipeNeighbors(cellsToWipe).then(neighborsWipeResult => {
 									const bonusesMightBeCreated = BONUSES_FOR_CELLS_DESTROYED.filter(bonuse => bonuse.canGetThisBonusForAchievement(neighborsWipeResult.cellsWiped));
@@ -327,7 +327,7 @@
 									const bonusToCreate = bonusesMightBeCreated.pop();
 
 									if (bonusToCreate) {
-										self.content = bonusToCreate.create(self);
+										self.content = bonusToCreate.create(initialCellContent);
 									}
 
 									neighborsWipeResult.onPreparationsFinished();
@@ -382,10 +382,10 @@
 						};
 					},
 
-					createColorLightningCell(cell)
+					createColorLightningCell(cellContent)
 					{
 						return {
-							color: cell.content.color,
+							color: cellContent.color,
 							type: 'bonus-color-lightning',
 							character: '🗲',
 							canFallDown: true,
