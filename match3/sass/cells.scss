@@ -45,32 +45,36 @@
 	background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAABZJREFUeNpi2r9//38gYGAEESAAEGAAasgJOgzOKCoAAAAASUVORK5CYII=) !important;
 }
 
-.cell-color--red {
+%cell-generic-tile {
 	background-image: url(img/tiles.png) !important;
+}
+
+.cell-color--red {
+	@extend %cell-generic-tile;
 	background-position: -87px -3px;
 	border-color: red;
 }
 
 .cell-color--blue {
-	background-image: url(img/tiles.png) !important;
+	@extend %cell-generic-tile;
 	background-position: -170px -3px;
 	border-color: blue;
 }
 
 .cell-color--orange {
-	background-image: url(img/tiles.png) !important;
+	@extend %cell-generic-tile;
 	background-position: -254px -3px;
 	border-color: orange;
 }
 
 .cell-color--purple {
-	background-image: url(img/tiles.png) !important;
+	@extend %cell-generic-tile;
 	background-position: -129px -3px;
 	border-color: purple;
 }
 
 .cell-color--green {
-	background-image: url(img/tiles.png) !important;
+	@extend %cell-generic-tile;
 	background-position: -3px -3px;
 	border-color: green;
 }
@@ -78,40 +82,46 @@
 .cell-type--blocker {
 }
 
-.cell-type--unremovable-blocker {
+
+
+%cell-blocker {
 	background-image: url(img/blockers.png) !important;
+	cursor: default;
+}
+
+.cell-type--unremovable-blocker {
+	@extend %cell-blocker;
 	background-position: -212px -3px;
 	border-color: black;
-	cursor: default;
 }
 
 
 .cell-type--blocker.cell-color--red {
-	background-image: url(img/blockers.png) !important;
+	@extend %cell-blocker;
 	background-position: -87px -3px;
 	border-color: red;
 }
 
 .cell-type--blocker.cell-color--blue {
-	background-image: url(img/blockers.png) !important;
+	@extend %cell-blocker;
 	background-position: -170px -3px;
 	border-color: blue;
 }
 
 .cell-type--blocker.cell-color--orange {
-	background-image: url(img/blockers.png) !important;
+	@extend %cell-blocker;
 	background-position: -254px -3px;
 	border-color: orange;
 }
 
 .cell-type--blocker.cell-color--purple {
-	background-image: url(img/blockers.png) !important;
+	@extend %cell-blocker;
 	background-position: -129px -3px;
 	border-color: purple;
 }
 
 .cell-type--blocker.cell-color--green {
-	background-image: url(img/blockers.png) !important;
+	@extend %cell-blocker;
 	background-position: -3px -3px;
 	border-color: green;
 }

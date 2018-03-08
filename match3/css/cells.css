@@ -32,59 +32,54 @@
 .cell-type--bonus-horz-arrow {
   background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAABZJREFUeNpi2r9//38gYGAEESAAEGAAasgJOgzOKCoAAAAASUVORK5CYII=) !important; }
 
+.cell-color--red, .cell-color--blue, .cell-color--orange, .cell-color--purple, .cell-color--green {
+  background-image: url(img/tiles.png) !important; }
+
 .cell-color--red {
-  background-image: url(img/tiles.png) !important;
   background-position: -87px -3px;
   border-color: red; }
 
 .cell-color--blue {
-  background-image: url(img/tiles.png) !important;
   background-position: -170px -3px;
   border-color: blue; }
 
 .cell-color--orange {
-  background-image: url(img/tiles.png) !important;
   background-position: -254px -3px;
   border-color: orange; }
 
 .cell-color--purple {
-  background-image: url(img/tiles.png) !important;
   background-position: -129px -3px;
   border-color: purple; }
 
 .cell-color--green {
-  background-image: url(img/tiles.png) !important;
   background-position: -3px -3px;
   border-color: green; }
 
-.cell-type--unremovable-blocker {
+.cell-type--unremovable-blocker, .cell-type--blocker.cell-color--red, .cell-type--blocker.cell-color--blue, .cell-type--blocker.cell-color--orange, .cell-type--blocker.cell-color--purple, .cell-type--blocker.cell-color--green {
   background-image: url(img/blockers.png) !important;
-  background-position: -212px -3px;
-  border-color: black;
   cursor: default; }
 
+.cell-type--unremovable-blocker {
+  background-position: -212px -3px;
+  border-color: black; }
+
 .cell-type--blocker.cell-color--red {
-  background-image: url(img/blockers.png) !important;
   background-position: -87px -3px;
   border-color: red; }
 
 .cell-type--blocker.cell-color--blue {
-  background-image: url(img/blockers.png) !important;
   background-position: -170px -3px;
   border-color: blue; }
 
 .cell-type--blocker.cell-color--orange {
-  background-image: url(img/blockers.png) !important;
   background-position: -254px -3px;
   border-color: orange; }
 
 .cell-type--blocker.cell-color--purple {
-  background-image: url(img/blockers.png) !important;
   background-position: -129px -3px;
   border-color: purple; }
 
 .cell-type--blocker.cell-color--green {
-  background-image: url(img/blockers.png) !important;
   background-position: -3px -3px;
   border-color: green; }
 
