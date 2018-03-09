@@ -121,8 +121,8 @@
 
 		window.ngApp.controller('PlayfieldController', ['$scope', function($scope) {
 			const cellsMatch = (cellA, cellB) => cellA.content.color == cellB.content.color
-				&& cellA.content.type != 'blocker'
-				&& cellB.content.type != 'blocker';
+				&& cellA.content.type == 'generic'
+				&& cellB.content.type == 'generic';
 
 			$scope.cellsCollectedByColor = {};
 
