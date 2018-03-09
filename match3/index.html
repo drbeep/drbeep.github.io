@@ -241,18 +241,19 @@
 					return cellsCollected;
 				};
 
+
 				const collectBlockersAdjacentToAnyOfCells = (cellsCollected) => {
-					let color = cellsCollected.length > 0
+					const color = cellsCollected.length > 0
 						? cellsCollected[0].content.color
 						: null;
 
 					return $scope.cells.filter(x => x && x.content
 						&& x.content.type == 'blocker'
 						&& x.content.color == color
-						&& cellsCollected.some(collectedCell => checkForCellsAreNeighbors(x, collectedCell)))
+						&& cellsCollected.some(collectedCell => cellsAreAdjacent(x, collectedCell)))
 				};
 
-				const checkForCellsAreNeighbors = (cellA, cellB) => (Math.abs(cellA.row - cellB.row) <= 1 && cellA.col == cellB.col)
+				const cellsAreAdjacent = (cellA, cellB) => (Math.abs(cellA.row - cellB.row) <= 1 && cellA.col == cellB.col)
 					|| (Math.abs(cellA.col - cellB.col) <= 1 && cellA.row == cellB.row);
 
 
@@ -269,12 +270,12 @@
 								}
 
 								let cellsToBeCollected = collectAdjacentCellsOfSameColor(self);
-								let blockersToBeCollected = collectBlockersAdjacentToAnyOfCells(cellsToBeCollected)
 
-								if (blockersToBeCollected && blockersToBeCollected.length > 0)
-									cellsToBeCollected = cellsToBeCollected.concat(blockersToBeCollected);
+								const blockersToBeCollected = collectBlockersAdjacentToAnyOfCells(cellsToBeCollected);
+								cellsToBeCollected = cellsToBeCollected.concat(blockersToBeCollected);
 
-								let initialCellContent = self.content;
+
+								const initialCellContent = self.content;
 
 								if (cellsToBeCollected.filter(x => x.content.type == 'generic').length >= MIN_CELLS_TO_WIPE) {
 									collectCells(cellsToBeCollected).then(neighborsWipeResult => {
