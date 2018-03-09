@@ -161,13 +161,6 @@
 
 
 			const collectCells = cellsToBeCollected => {
-				if (cellsToBeCollected.filter(x=>x.content.type == 'generic').length < MIN_CELLS_TO_WIPE) {
-					return Promise.resolve({
-						cellsWiped: 0,
-						onPreparationsFinished() { }
-					});
-				}
-
 				cellsToBeCollected.forEach(cell => { cell.isFadingOut = true; });
 
 				$scope.clicksBlocked = true;
@@ -283,18 +276,20 @@
 
 								let initialCellContent = self.content;
 
-								collectCells(cellsToBeCollected).then(neighborsWipeResult => {
-									const bonusesMightBeCreated = BONUSES_FOR_CELLS_DESTROYED.filter(bonuse => bonuse.canGetThisBonusForAchievement(neighborsWipeResult.cellsWiped));
-									bonusesMightBeCreated.sort((a, b) => a.priority - b.priority);
+								if (cellsToBeCollected.filter(x => x.content.type == 'generic').length >= MIN_CELLS_TO_WIPE) {
+									collectCells(cellsToBeCollected).then(neighborsWipeResult => {
+										const bonusesMightBeCreated = BONUSES_FOR_CELLS_DESTROYED.filter(bonuse => bonuse.canGetThisBonusForAchievement(neighborsWipeResult.cellsWiped));
+										bonusesMightBeCreated.sort((a, b) => a.priority - b.priority);
 
-									const bonusToCreate = bonusesMightBeCreated.pop();
+										const bonusToCreate = bonusesMightBeCreated.pop();
 
-									if (bonusToCreate) {
-										self.content = bonusToCreate.create(initialCellContent);
-									}
+										if (bonusToCreate) {
+											self.content = bonusToCreate.create(initialCellContent);
+										}
 
-									neighborsWipeResult.onPreparationsFinished();
-								});
+										neighborsWipeResult.onPreparationsFinished();
+									});
+								}
 							}
 						};
 					},
