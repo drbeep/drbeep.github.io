@@ -120,7 +120,9 @@
 
 
 		window.ngApp.controller('PlayfieldController', ['$scope', function($scope) {
-			const cellsMatch = (cellA, cellB) => cellA.content.color == cellB.content.color;
+			const cellsMatch = (cellA, cellB) => cellA.content.color == cellB.content.color
+				&& cellA.content.type != 'blocker'
+				&& cellB.content.type != 'blocker';
 
 			$scope.cellsCollectedByColor = {};
 
@@ -239,17 +241,25 @@
 					neighbors.forEach(neighborCell => {
 						if (neighborCell && neighborCell.content && cellsMatch(initialCell, neighborCell) && cellsCollected.indexOf(neighborCell) < 0) {
 							cellsCollected.push(neighborCell);
-
-							if (neighborCell.content.type != 'blocker') {
-								collectAdjacentCellsOfSameColor(neighborCell, cellsCollected);
-							}
+							collectAdjacentCellsOfSameColor(neighborCell, cellsCollected);
 						}
 					});
 
-					return cellsCollected.filter(x => x.content.type != 'blocker').length < MIN_CELLS_TO_WIPE
-						? cellsCollected.filter(x => x.content.type != 'blocker')
-						: cellsCollected;
+					return cellsCollected;
 				};
+
+				const collectBlockersAdjacentToAnyOfCells = (cellsCollected) => {
+					let color = cellsCollected.length > 0
+						? cellsCollected[0].content.color
+						: null;
+
+					$scope.cells.filter(x => x.content.type == 'blocker'
+						&& x.content.color == color
+						&& cellsCollected.some(collectedCell => checkForCellsAreNeighbors(x, collectedCell)))
+				};
+
+				const checkForCellsAreNeighbors = (cellA, cellB) => (Math.round(cellA.row - cellB.row) <= 1 && cellA.col == cellB.col)
+					|| (Math.round(cellA.col - cellB.col) <= 1 && cellA.row == cellB.row);
 
 
 				const api = {
@@ -265,6 +275,7 @@
 								}
 
 								const cellsToBeCollected = collectAdjacentCellsOfSameColor(self);
+								cellsToBeCollected = cellsToBeCollected.concat(collectBlockersAdjacentToAnyOfCells(cellsToBeCollected));
 								let initialCellContent = self.content;
 
 								collectCells(cellsToBeCollected).then(neighborsWipeResult => {
