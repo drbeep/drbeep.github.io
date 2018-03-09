@@ -161,6 +161,8 @@
 
 
 			const collectCells = cellsToBeCollected => {
+				cellsToBeCollected.forEach(cell => cell.content.onCollect(cell));
+
 				cellsToBeCollected.forEach(cell => { cell.isFadingOut = true; });
 
 				$scope.clicksBlocked = true;
@@ -291,6 +293,10 @@
 										neighborsWipeResult.onPreparationsFinished();
 									});
 								}
+							},
+
+							onCollect(self) { 
+								//nothing
 							}
 						};
 					},
@@ -303,6 +309,10 @@
 
 							onClicked(self) {
 								;	//	yea, do nothing
+							},
+
+							onCollect(self) { 
+								//nothing
 							}
 						};
 					},
@@ -316,6 +326,10 @@
 
 							onClicked(self) {
 								;	//	yea, do nothing
+							},
+
+							onCollect(self) {
+								//nothing
 							}
 						};
 					},
@@ -327,12 +341,20 @@
 							type: 'bonus-horz-arrow',
 							character: '⇿',
 							canFallDown: true,
+							collected: false,
 
 							onClicked(self) {
+								self.content.collected = true;
 								const cellsToBeCollected = collectTheWholeRowOfACell(self);
 								collectCells(cellsToBeCollected).then(neighborsWipeResult => {
 									neighborsWipeResult.onPreparationsFinished();
 								});
+							},
+
+							onCollect(self) {
+								if (!self.content.collected) {								
+									self.content.onClicked(self);	
+								}
 							}
 						};
 					},
@@ -344,12 +366,20 @@
 							type: 'bonus-vert-arrow',
 							character: '↕',
 							canFallDown: true,
+							collected: false,
 
 							onClicked(self) {
+								self.content.collected = true;
 								const cellsToBeCollected = collectTheWholeColOfACell(self);
 								collectCells(cellsToBeCollected).then(neighborsWipeResult => {
 									neighborsWipeResult.onPreparationsFinished();
 								});
+							},
+
+							onCollect(self) {
+								if (!self.content.collected) {
+									self.content.onClicked(self);
+								}
 							}
 						};
 					},
@@ -361,12 +391,20 @@
 							type: 'bonus-bomb',
 							character: '☠',
 							canFallDown: true,
+							collected: false,
 
 							onClicked(self) {
+								self.content.collected = true;
 								const cellsToBeCollected = collectAllAdjacentCells(self);
 								collectCells(cellsToBeCollected).then(neighborsWipeResult => {
 									neighborsWipeResult.onPreparationsFinished();
 								});
+							},
+
+							onCollect(self) {
+								if (!self.content.collected) {
+									self.content.onClicked(self);
+								}
 							}
 						};
 					},
@@ -374,17 +412,26 @@
 
 					createColorLightningCell(cellContent) {
 						return {
-							color: cellContent.color,
+							color: cellContent ?
+								cellContent.color
+								: ALL_POSSIBLE_COLORS[Math.floor(Math.random() * ALL_POSSIBLE_COLORS.length)],
 							type: 'bonus-color-lightning',
 							character: '⚡',
 							canFallDown: true,
+							collected: false,
 
 							onClicked(self) {
+								self.content.collected = true;
 								const cellsToBeCollected = collectAllCellsWithSameColor(self);
-
 								collectCells(cellsToBeCollected).then(neighborsWipeResult => {
 									neighborsWipeResult.onPreparationsFinished();
 								});
+							},
+
+							onCollect(self) {
+								if (!self.content.collected) {
+									self.content.onClicked(self);
+								}
 							}
 						}
 					}
@@ -398,7 +445,8 @@
 						'unremovable-blocker': api.createUnremovableBlockerCell,
 						'bonus-horz-arrow': api.createRowArrowBombCell,
 						'bonus-vert-arrow': api.createColArrowBombCell,
-						'bonus-bomb': api.createRoundBombCell
+						'bonus-bomb': api.createRoundBombCell,
+						'bonus-color-lightning': api.createColorLightningCell
 					};
 
 					if (!constructorsByTypeName[serializedCell.type]) {
@@ -416,6 +464,10 @@
 			const HARDCODED_LEVEL_SAMPLE = {
 				cells: [{
 					row: 3,
+					col: 0,
+					content: { type: 'bonus-vert-arrow' }
+				}, {
+					row: 3,
 					col: 3,
 					content: { type: 'unremovable-blocker' }
 				}, {
@@ -427,17 +479,25 @@
 					col: 8,
 					content: { type: 'bonus-horz-arrow' }
 				}, {
+					row: 8,
+					col: 0,
+					content: { type: 'bonus-bomb' }
+				}, {
+					row: 8,
+					col: 2,
+					content: { type: 'bonus-color-lightning' }
+				}, {
 					row: 4,
 					col: 4,
-					content: { type: 'blocker', arguments: [ 'red' ] }
+					content: { type: 'blocker', arguments: ['red'] }
 				}, {
 					row: 4,
 					col: 5,
-					content: { type: 'blocker', arguments: [ 'red' ] }
+					content: { type: 'blocker', arguments: ['red'] }
 				}, {
 					row: 4,
 					col: 6,
-					content: { type: 'blocker', arguments: [ 'red' ] }
+					content: { type: 'blocker', arguments: ['red'] }
 				}]
 			};
 
