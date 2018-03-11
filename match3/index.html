@@ -161,9 +161,10 @@
 
 
 			const collectCells = cellsToBeCollected => {
-				cellsToBeCollected.forEach(cell => cell.content.onCollect(cell));
-
-				cellsToBeCollected.forEach(cell => { cell.isFadingOut = true; });
+				cellsToBeCollected.forEach(cell => {
+					cell.isFadingOut = true;
+					cell.content && cell.content.onCollected(cell);
+				});
 
 				$scope.clicksBlocked = true;
 
@@ -217,7 +218,7 @@
 				const collectAllAdjacentCells = initialCell => $scope.cells.filter(cell => Math.abs(cell.row - initialCell.row) + Math.abs(cell.col - initialCell.col) <= 2);
 
 				const collectTheWholeRowOfACell = initialCell => $scope.cells.filter(cell => cell.row == initialCell.row);
-				
+
 				const collectTheWholeColOfACell = initialCell => $scope.cells.filter(cell => cell.col == initialCell.col);
 
 				const collectAllCellsWithSameColor = initialCell => $scope.cells.filter(cell => cell.content && cell.content.color == initialCell.content.color)
@@ -295,7 +296,7 @@
 								}
 							},
 
-							onCollect(self) { 
+							onCollected(self) {
 								//nothing
 							}
 						};
@@ -311,7 +312,7 @@
 								;	//	yea, do nothing
 							},
 
-							onCollect(self) { 
+							onCollected(self) {
 								//nothing
 							}
 						};
@@ -328,7 +329,7 @@
 								;	//	yea, do nothing
 							},
 
-							onCollect(self) {
+							onCollected(self) {
 								//nothing
 							}
 						};
@@ -351,9 +352,9 @@
 								});
 							},
 
-							onCollect(self) {
-								if (!self.content.collected) {								
-									self.content.onClicked(self);	
+							onCollected(self) {
+								if (!self.content.collected) {
+									self.content.onClicked(self);
 								}
 							}
 						};
@@ -376,7 +377,7 @@
 								});
 							},
 
-							onCollect(self) {
+							onCollected(self) {
 								if (!self.content.collected) {
 									self.content.onClicked(self);
 								}
@@ -401,7 +402,7 @@
 								});
 							},
 
-							onCollect(self) {
+							onCollected(self) {
 								if (!self.content.collected) {
 									self.content.onClicked(self);
 								}
@@ -428,7 +429,7 @@
 								});
 							},
 
-							onCollect(self) {
+							onCollected(self) {
 								if (!self.content.collected) {
 									self.content.onClicked(self);
 								}
